@@ -10,7 +10,7 @@ BASE="$(pwd)"
 BUILDROOT_ROOT_PATH="$BASE"
 BUILDROOT_TMP_DEFCONFIG="/tmp/defconfig"
 OUTPUT="$BUILDROOT_ROOT_PATH/out"
-OVERLAY="$BASE/overlay"
+OVERLAY="$BASE/board/ci/overlay"
 TEST_REPO="https://github.com/free-electrons/custom_tests"
 TEST_FOLDER="$OVERLAY/tests"
 COMMAND=""
@@ -86,6 +86,7 @@ do
                     defconfig $arg
                     ;;
                 "build")
+                    prepare_overlay
                     build $arg
                     ;;
                 "savedefconfig")
