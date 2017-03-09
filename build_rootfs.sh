@@ -25,6 +25,7 @@ print_help () {
     echo -e "\t\tarmv5"
     echo -e "\t\tarmv6"
     echo -e "\t\tarmv7"
+    echo -e "\t\taarch64"
     exit 1
 }
 
@@ -79,7 +80,7 @@ do
         "defconfig"|"build"|"savedefconfig")
             COMMAND=$arg
             ;;
-        "armv7"|"armv6"|"armv5")
+        "armv7"|"armv6"|"armv5"|"aarch64")
             case $COMMAND in
                 "defconfig")
                     defconfig $arg
