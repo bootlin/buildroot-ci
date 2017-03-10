@@ -70,7 +70,11 @@ build () {
     echo "Copying and renaming file"
     test -d $OUTPUT || mkdir $OUTPUT
     cp output/images/rootfs.cpio.gz $OUTPUT/rootfs_$1.cpio.gz
-    echo -e "\033[32mYour new rootfs is available: $OUTPUT/rootfs_$1.cpio.gz\033[39m"
+    cp output/images/rootfs.tar.gz $OUTPUT/rootfs_$1.tar.gz
+    echo -e "\033[32mYour new rootfs is available:
+    - $OUTPUT/rootfs_$1.cpio.gz
+    - $OUTPUT/rootfs_$1.tar.gz
+    \033[39m"
 }
 
 
