@@ -22,6 +22,7 @@ print_help () {
     echo -e "\t\tdefconfig     run make defconfig with the proper defconfig in BR2_DEFCONFIG"
     echo -e "\t\tsavedefconfig run make savedefconfig and save to the appropriate file"
     echo -e "\tAvailable ARCHs:"
+    echo -e "\t\tarmv4"
     echo -e "\t\tarmv5"
     echo -e "\t\tarmv6"
     echo -e "\t\tarmv7"
@@ -84,7 +85,7 @@ do
         "defconfig"|"build"|"savedefconfig")
             COMMAND=$arg
             ;;
-        "armv7"|"armv6"|"armv5"|"aarch64")
+        "armv7"|"armv6"|"armv5"|"armv4"|"aarch64")
             case $COMMAND in
                 "defconfig")
                     defconfig $arg
