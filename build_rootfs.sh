@@ -1,8 +1,6 @@
 #!/bin/bash
 #
-# Skia < skia AT libskia DOT so >
-#
-# Beerware licensed software - 2017
+# Florent Jacquet <florent.jacquet@free-electrons.com>
 #
 
 cd $(dirname $0)
@@ -16,19 +14,34 @@ TEST_FOLDER="$OVERLAY/tests"
 COMMAND=""
 
 print_help () {
-    echo -e "Usage: $0 <command> ARCH [ARCH ...]\n"
-    echo -e "\tAvailable commands:"
+    echo -e "Usage: $0 <command> ARCH [<command> ARCH ...]\n"
+    echo -e "\n\tAvailable commands:"
     echo -e "\t\tbuild         run make -j 4"
     echo -e "\t\tdefconfig     run make defconfig with the proper defconfig in BR2_DEFCONFIG"
     echo -e "\t\tsavedefconfig run make savedefconfig and save to the appropriate file"
-    echo -e "\tAvailable ARCHs:"
+    echo -e "\n\tAvailable ARCHs:"
     echo -e "\t\tarmv4"
     echo -e "\t\tarmv5"
     echo -e "\t\tarmv6"
     echo -e "\t\tarmv7"
     echo -e "\t\taarch64"
+    echo -e "\n\tExamples:"
+    echo -e "\n\t$0 defconfig armv7"
+    echo -e "\t\t This will setup the proper environment to build an armv7 rootfs"
+    echo -e "\n\t$0 build armv7"
+    echo -e "\t\t This will actually build an armv7 rootfs"
+    echo -e "\n\t$0 savedefconfig armv7"
+    echo -e "\t\t This will save the armv7 defconfig after you made some changes in the .config with \`make menuconfig\`"
+    echo -e "\n\t$0 defconfig armv5 build armv5 defconfig armv7 build armv7"
+    echo -e "\t\t This will build both armv5 and armv7 rootfs after setuping each defconfig"
+    echo -e "\n All rootfs will be stored in the $OUTPUT folder."
+    echo -e "\n\n"
     exit 1
 }
+
+if [ "$#" -eq 0 ]; then
+    print_help;
+fi
 
 prepare_overlay () {
     cd $OVERLAY
