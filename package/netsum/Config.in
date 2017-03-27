@@ -1,0 +1,6 @@
+config BR2_PACKAGE_NETSUM
+	bool "netsum"
+	help
+	  Simple tool to check network I/Os
+
+	  http://git.lacie-nas.org/?p=netsum.git;a=summary
