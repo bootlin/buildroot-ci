@@ -1,1 +1,15 @@
-See `./build_rootfs.sh`
+# Build custom rootfs
+
+See `./build_rootfs.sh` for the command invocation.
+
+Other custom files are:
+  * configs/ci_aarch64_defconfig
+  * configs/ci_armv4_defconfig
+  * configs/ci_armv5_defconfig
+  * configs/ci_armv6_defconfig
+  * configs/ci_armv7_defconfig
+  * configs/ci_common_defconfig
+  * board/ci/*
+
+
+
