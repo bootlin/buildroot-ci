@@ -1,2 +1,4 @@
-# From https://lists.x.org/archives/xorg-announce/2016-October/002732.html
-sha256 c762b4072ed448e2ae9f35cebd7fec8df7fd42b3ae61462cc3b2f720a873eae2  xf86-input-libinput-0.22.0.tar.bz2
+# From https://lists.x.org/archives/xorg-announce/2017-March/002782.html
+md5 bd64be831914eda924f7166243c34968  xf86-input-libinput-0.25.0.tar.bz2
+sha1 e43fd18bc32b892fb203f842186ad0d6c675b696  xf86-input-libinput-0.25.0.tar.bz2
+sha256 bb7fd1658fa7e6c757fd55480aa8a07f8ccfb0a80ae42c29dbc67d57958c556f  xf86-input-libinput-0.25.0.tar.bz2

@@ -5,11 +5,11 @@
 ################################################################################
 
 LIBGTK2_VERSION_MAJOR = 2.24
-LIBGTK2_VERSION = $(LIBGTK2_VERSION_MAJOR).30
+LIBGTK2_VERSION = $(LIBGTK2_VERSION_MAJOR).31
 LIBGTK2_SOURCE = gtk+-$(LIBGTK2_VERSION).tar.xz
 LIBGTK2_SITE = http://ftp.gnome.org/pub/gnome/sources/gtk+/$(LIBGTK2_VERSION_MAJOR)
 LIBGTK2_INSTALL_STAGING = YES
-LIBGTK2_LICENSE = LGPLv2+
+LIBGTK2_LICENSE = LGPL-2.0+
 LIBGTK2_LICENSE_FILES = COPYING
 # For 0001-reduce-dependencies.patch
 LIBGTK2_AUTORECONF = YES

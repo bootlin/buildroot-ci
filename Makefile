@@ -2,7 +2,7 @@
 #
 # Copyright (C) 1999-2005 by Erik Andersen <andersen@codepoet.org>
 # Copyright (C) 2006-2014 by the Buildroot developers <buildroot@uclibc.org>
-# Copyright (C) 2014-2016 by the Buildroot developers <buildroot@buildroot.org>
+# Copyright (C) 2014-2017 by the Buildroot developers <buildroot@buildroot.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@
 # Just run 'make menuconfig', configure stuff, then run 'make'.
 # You shouldn't need to mess with anything beyond this point...
 #--------------------------------------------------------------
+
+# Delete default rules. We don't use them. This saves a bit of time.
+.SUFFIXES:
 
 # we want bash as shell
 SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
@@ -83,7 +86,9 @@ else # umask / $(CURDIR) / $(O)
 all:
 
 # Set and export the version string
-export BR2_VERSION := 2016.11.2
+export BR2_VERSION := 2017.05
+# Actual time the release is cut (for reproducible builds)
+BR2_VERSION_EPOCH = 1496267000
 
 # Save running make version since it's clobbered by the make package
 RUNNING_MAKE_VERSION := $(MAKE_VERSION)
@@ -123,7 +128,8 @@ export BR2_VERSION_FULL := $(BR2_VERSION)$(shell $(TOPDIR)/support/scripts/setlo
 noconfig_targets := menuconfig nconfig gconfig xconfig config oldconfig randconfig \
 	defconfig %_defconfig allyesconfig allnoconfig silentoldconfig release \
 	randpackageconfig allyespackageconfig allnopackageconfig \
-	print-version olddefconfig distclean
+	print-version olddefconfig distclean manual manual-html manual-split-html \
+	manual-pdf manual-text manual-epub
 
 # Some global targets do not trigger a build, but are used to collect
 # metadata, or do various checks. When such targets are triggered,
@@ -134,9 +140,12 @@ noconfig_targets := menuconfig nconfig gconfig xconfig config oldconfig randconf
 # We're building in two situations: when MAKECMDGOALS is empty
 # (default target is to build), or when MAKECMDGOALS contains
 # something else than one of the nobuild_targets.
-nobuild_targets := source source-check \
-	legal-info external-deps _external-deps \
-	clean distclean help
+nobuild_targets := source %-source source-check \
+	legal-info %-legal-info external-deps _external-deps \
+	clean distclean help show-targets graph-depends \
+	%-graph-depends %-show-depends %-show-version \
+	graph-build graph-size list-defconfigs \
+	savedefconfig printvars
 ifeq ($(MAKECMDGOALS),)
 BR_BUILDING = y
 else ifneq ($(filter-out $(nobuild_targets),$(MAKECMDGOALS)),)
@@ -165,10 +174,10 @@ endif
 
 # bash prints the name of the directory on 'cd <dir>' if CDPATH is
 # set, so unset it here to not cause problems. Notice that the export
-# line doesn't affect the environment of $(shell ..) calls, so
-# explictly throw away any output from 'cd' here.
+# line doesn't affect the environment of $(shell ..) calls.
 export CDPATH :=
-BASE_DIR := $(shell mkdir -p $(O) && cd $(O) >/dev/null && pwd)
+
+BASE_DIR := $(CANONICAL_O)
 $(if $(BASE_DIR),, $(error output directory "$(O)" does not exist))
 
 
@@ -239,9 +248,13 @@ endif
 
 # timezone and locale may affect build output
 ifeq ($(BR2_REPRODUCIBLE),y)
-export TZ=UTC
-export LANG=C
-export LC_ALL=C
+export TZ = UTC
+export LANG = C
+export LC_ALL = C
+export GZIP = -n
+BR2_VERSION_GIT_EPOCH = $(shell GIT_DIR=$(TOPDIR)/.git $(GIT) log -1 --format=%at)
+export SOURCE_DATE_EPOCH = $(if $(wildcard $(TOPDIR)/.git),$(BR2_VERSION_GIT_EPOCH),$(BR2_VERSION_EPOCH))
+DEPENDENCIES_HOST_PREREQ += host-fakedate
 endif
 
 # To put more focus on warnings, be less verbose as default
@@ -310,6 +323,7 @@ HOSTLN := $(shell which $(HOSTLN) || type -p $(HOSTLN) || echo ln)
 HOSTNM := $(shell which $(HOSTNM) || type -p $(HOSTNM) || echo nm)
 HOSTOBJCOPY := $(shell which $(HOSTOBJCOPY) || type -p $(HOSTOBJCOPY) || echo objcopy)
 HOSTRANLIB := $(shell which $(HOSTRANLIB) || type -p $(HOSTRANLIB) || echo ranlib)
+SED := $(shell which sed || type -p sed) -i -e
 
 export HOSTAR HOSTAS HOSTCC HOSTCXX HOSTLD
 export HOSTCC_NOCCACHE HOSTCXX_NOCCACHE
@@ -388,6 +402,7 @@ unexport QMAKESPEC
 unexport TERMINFO
 unexport MACHINE
 unexport O
+unexport GCC_COLORS
 
 GNU_HOST_NAME := $(shell support/gnuconfig/config.guess)
 
@@ -407,6 +422,7 @@ KERNEL_ARCH := $(shell echo "$(ARCH)" | sed -e "s/-.*//" \
 	-e s/arm.*/arm/ -e s/sa110/arm/ \
 	-e s/aarch64.*/arm64/ \
 	-e s/bfin/blackfin/ \
+	-e s/or1k/openrisc/ \
 	-e s/parisc64/parisc/ \
 	-e s/powerpc64.*/powerpc/ \
 	-e s/ppc.*/powerpc/ -e s/mips.*/mips/ \
@@ -416,6 +432,7 @@ KERNEL_ARCH := $(shell echo "$(ARCH)" | sed -e "s/-.*//" \
 ZCAT := $(call qstrip,$(BR2_ZCAT))
 BZCAT := $(call qstrip,$(BR2_BZCAT))
 XZCAT := $(call qstrip,$(BR2_XZCAT))
+LZCAT := $(call qstrip,$(BR2_LZCAT))
 TAR_OPTIONS = $(call qstrip,$(BR2_TAR_OPTIONS)) -xf
 
 # packages compiled for the host go here
@@ -462,6 +479,9 @@ all: world
 include Makefile.legacy
 
 include package/Makefile.in
+# arch/arch.mk.* must be after package/Makefile.in because it may need to
+# complement variables defined therein, like BR_NO_CHECK_HASH_FOR.
+-include $(wildcard arch/arch.mk.*)
 include support/dependencies/dependencies.mk
 
 include toolchain/*.mk
@@ -656,7 +676,7 @@ endif
 	rm -rf $(TARGET_DIR)/usr/info $(TARGET_DIR)/usr/share/info
 	rm -rf $(TARGET_DIR)/usr/doc $(TARGET_DIR)/usr/share/doc
 	rm -rf $(TARGET_DIR)/usr/share/gtk-doc
-	-rmdir $(TARGET_DIR)/usr/share 2>/dev/null
+	rmdir $(TARGET_DIR)/usr/share 2>/dev/null || true
 	$(STRIP_FIND_CMD) | xargs -0 $(STRIPCMD) 2>/dev/null || true
 
 # See http://sourceware.org/gdb/wiki/FAQ, "GDB does not see any threads
@@ -716,7 +736,7 @@ legal-info-prepare: $(LEGAL_INFO_DIR)
 	@$(call legal-license-file,buildroot,COPYING,COPYING,HOST)
 	@$(call legal-manifest,PACKAGE,VERSION,LICENSE,LICENSE FILES,SOURCE ARCHIVE,SOURCE SITE,TARGET)
 	@$(call legal-manifest,PACKAGE,VERSION,LICENSE,LICENSE FILES,SOURCE ARCHIVE,SOURCE SITE,HOST)
-	@$(call legal-manifest,buildroot,$(BR2_VERSION_FULL),GPLv2+,COPYING,not saved,not saved,HOST)
+	@$(call legal-manifest,buildroot,$(BR2_VERSION_FULL),GPL-2.0+,COPYING,not saved,not saved,HOST)
 	@$(call legal-warning,the Buildroot source code has not been saved)
 	@cp $(BR2_CONFIG) $(LEGAL_INFO_DIR)/buildroot.config
 
@@ -736,6 +756,8 @@ legal-info: dirs legal-info-clean legal-info-prepare $(foreach p,$(PACKAGES),$(p
 
 show-targets:
 	@echo $(PACKAGES) $(TARGETS_ROOTFS)
+
+show-build-order: $(patsubst %,%-show-build-order,$(PACKAGES))
 
 graph-build: $(O)/build/build-time.log
 	@install -d $(GRAPHS_DIR)
@@ -920,7 +942,10 @@ printvars:
 		$(sort $(if $(VARS),$(filter $(VARS),$(.VARIABLES)),$(.VARIABLES))), \
 		$(if $(filter-out environment% default automatic, \
 				$(origin $V)), \
-		$(info $V=$($V) ($(value $V)))))
+		$(if $(QUOTED_VARS),\
+			$(info $V='$(subst ','\'',$(if $(RAW_VARS),$(value $V),$($V)))'), \
+			$(info $V=$(if $(RAW_VARS),$(value $V),$($V))))))
+# ' Syntax colouring...
 
 clean:
 	rm -rf $(TARGET_DIR) $(BINARIES_DIR) $(HOST_DIR) \
@@ -998,6 +1023,7 @@ help:
 	@echo '  source-check           - check selected packages for valid download URLs'
 	@echo '  external-deps          - list external packages used'
 	@echo '  legal-info             - generate info about license compliance'
+	@echo '  printvars              - dump all the internal variables'
 	@echo
 	@echo '  make V=0|1             - 0 => quiet build (default), 1 => verbose build'
 	@echo '  make O=dir             - Locate all output files in "dir", including .config'
@@ -1050,6 +1076,9 @@ release:
 
 print-version:
 	@echo $(BR2_VERSION_FULL)
+
+.gitlab-ci.yml: .gitlab-ci.yml.in configs/*_defconfig
+	(cd configs; LC_ALL=C ls -1 *_defconfig) | sed 's/$$/: *defconfig/' | cat $< - > $@
 
 include docs/manual/manual.mk
 -include $(foreach dir,$(BR2_EXTERNAL_DIRS),$(dir)/docs/*/*.mk)
