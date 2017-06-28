@@ -7,7 +7,7 @@ cd $(dirname $0)
 BASE="$(pwd)"
 BUILDROOT_ROOT_PATH="$BASE"
 BUILDROOT_TMP_DEFCONFIG="/tmp/defconfig"
-OUTPUT="$BUILDROOT_ROOT_PATH/out"
+OUTPUT="$HOME/storage/rootfs"
 OVERLAY="$BASE/board/ci/overlay"
 TEST_REPO="https://github.com/free-electrons/test_suite"
 TEST_FOLDER="$OVERLAY/tests"
